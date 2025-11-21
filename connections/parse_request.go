@@ -1,11 +1,16 @@
 package connections
 
 import (
-	"fmt"
+	"log"
 	"net"
 )
 
-func parseRequest(conn net.Conn, requestBuffer []byte) (interface{}, error) {
-	fmt.Printf("Received from %s: %s\n", conn.RemoteAddr(), string(requestBuffer))
-	return nil, nil
+func makeRequestBuffer(conn net.Conn) ([]byte, error) {
+	buffer := make([]byte, 1024)
+	numBytes, err := conn.Read(buffer)
+	if err != nil {
+		log.Printf("Error reading from connection: %v", err)
+		return buffer, err
+	}
+	return buffer[:numBytes], nil
 }
