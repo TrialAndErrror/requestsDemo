@@ -1,7 +1,9 @@
 package connections
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"log"
 	"net"
 	"strconv"
@@ -18,11 +20,7 @@ func makeRequestBuffer(conn net.Conn) ([]byte, error) {
 	return buffer[:numBytes], nil
 }
 
-func sendGenericResponse(conn net.Conn) error {
-	statusCode := "HTTP/1.1 200 OK"
-
-	responseBody := `<!DOCTYPE html><html><head><title>Example</title></head><body><h1>Hello,World!</h1></body></html>`
-
+func buildResponse(status string, responseBody string) string {
 	headers := map[string]string{
 		"Date":           fmt.Sprintf("%v", time.Now().Format(time.RFC1123)),
 		"Server":         "Handmade Golang Server 1.0",
@@ -35,12 +33,13 @@ func sendGenericResponse(conn net.Conn) error {
 		headersString += fmt.Sprintf("%s: %s\n", key, value)
 	}
 
-	responseData := fmt.Sprintf("%s\n%s\n\n%s", statusCode, headersString, responseBody)
+	return fmt.Sprintf("%s\n%s\n\n%s", status, headersString, responseBody)
+}
 
-	response := []byte(responseData)
-
-	_, err := conn.Write(response)
-	return err
+func buildGenericErrorResponse() string {
+	statusCode := "HTTP/1.1 500 Internal Server Error"
+	responseBody := `<!DOCTYPE html><html lang="en"><head><title>Error:InternalServerError</title></head><body><h1>An unspecified server error occurred. Please try again</h1></body></html>`
+	return buildResponse(statusCode, responseBody)
 }
 
 func cleanupConnection(conn net.Conn) {
@@ -61,7 +60,23 @@ func HandleConnection(conn net.Conn) {
 		return
 	}
 
-	err = sendGenericResponse(conn)
+	var response string
+
+	responseTemplate, err := template.ParseFiles("templates/sample-response.html")
+	if err != nil {
+		response = buildGenericErrorResponse()
+	} else {
+		var buf bytes.Buffer
+		err = responseTemplate.Execute(&buf, nil)
+		if err != nil {
+			response = buildGenericErrorResponse()
+			log.Fatalf("Error executing template: %v", err)
+		} else {
+			response = buildResponse("HTTP/1.1 200 OK", buf.String())
+		}
+	}
+
+	_, err = conn.Write([]byte(response))
 	if err != nil {
 		log.Printf("Error writing to connection: %v", err)
 		return
