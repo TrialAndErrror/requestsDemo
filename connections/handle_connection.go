@@ -20,9 +20,12 @@ func HandleConnection(conn net.Conn) error {
 	defer cleanupConnection(conn)
 
 	requestBytes, err := makeRequestBuffer(conn)
+	if err != nil {
+		return err
+	}
 
 	requestString := string(requestBytes)
-	requestData := request.ProcessRequest(requestString)
+	requestData, err := request.ProcessRequest(requestString)
 	if err != nil {
 		return err
 	}
