@@ -27,7 +27,7 @@ func parseQueryParams(endpoint string) map[string]interface{} {
 	return parseKeyValuePairs(paramsString)
 }
 
-func processJSONData(jsonDataString string) map[string]interface{} {
+func parseJSONData(jsonDataString string) map[string]interface{} {
 	jsonData := make(map[string]interface{})
 	err := json.Unmarshal([]byte(jsonDataString), &jsonData)
 	if err != nil {

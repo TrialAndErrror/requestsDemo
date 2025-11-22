@@ -1,4 +1,4 @@
-package connections
+package response
 
 import (
 	"fmt"
@@ -20,10 +20,4 @@ func buildResponse(status string, responseBody string) string {
 	}
 
 	return fmt.Sprintf("%s\n%s\n\n%s", status, headersString, responseBody)
-}
-
-func buildGenericErrorResponse() string {
-	statusCode := "HTTP/1.1 500 Internal Server Error"
-	responseBody := `<!DOCTYPE html><html lang="en"><head><title>Error: Internal Server Error</title></head><body><h1>An unspecified server error occurred. Please try again</h1></body></html>`
-	return buildResponse(statusCode, responseBody)
 }

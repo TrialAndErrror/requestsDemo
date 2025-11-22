@@ -2,7 +2,7 @@ package request
 
 import "strings"
 
-func GetRawRequest(meta string, requestData []string) RawRequest {
+func getRawRequest(meta string, requestData []string) RawRequest {
 	requestMetaParts := strings.Split(meta, " ")
 	return RawRequest{
 		Meta: Meta{

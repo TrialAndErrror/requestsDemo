@@ -3,6 +3,7 @@ package request
 import (
 	"fmt"
 	"log"
+	"strings"
 )
 
 func processGetRequest(request RawRequest) ProcessedRequest {
@@ -45,15 +46,16 @@ func processPostRequest(request RawRequest) ProcessedRequest {
 		return processedRequest
 	}
 
-	contentType, ok := headersMap["Content-Type"]
+	contentTypeRaw, ok := headersMap["Content-Type"]
 	if !ok {
 		log.Printf("Missing Content-Type header: %v", headers)
 		return processedRequest
 	}
+	contentType := strings.Trim(strings.SplitN(contentTypeRaw, ";", 2)[0], " ")
 
 	switch contentType {
 	case "application/json":
-		jsonData := processJSONData(data)
+		jsonData := parseJSONData(data)
 		processedRequest.Data = jsonData
 
 	case "application/x-www-form-urlencoded":
@@ -65,7 +67,7 @@ func processPostRequest(request RawRequest) ProcessedRequest {
 
 func ProcessRequest(requestText string) (ProcessedRequest, error) {
 	requestLines := getRequestLines(requestText)
-	rawRequest := GetRawRequest(requestLines[0], requestLines[1:])
+	rawRequest := getRawRequest(requestLines[0], requestLines[1:])
 	switch rawRequest.Meta.method {
 	case "GET":
 		return processGetRequest(rawRequest), nil

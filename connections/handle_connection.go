@@ -1,11 +1,10 @@
 package connections
 
 import (
-	"bytes"
-	"html/template"
 	"log"
 	"net"
 	"requestsDemo/request"
+	"requestsDemo/response"
 )
 
 func cleanupConnection(conn net.Conn) {
@@ -21,28 +20,24 @@ func HandleConnection(conn net.Conn) error {
 
 	requestBytes, err := makeRequestBuffer(conn)
 	if err != nil {
-		return err
+		log.Printf("Error processing request: %v", err)
+		return writeResponse(conn, response.MakeGenericErrorResponse())
 	}
 
 	requestString := string(requestBytes)
 	requestData, err := request.ProcessRequest(requestString)
 	if err != nil {
-		return err
+		log.Printf("Error parsing request: %v", err)
+		return writeResponse(conn, response.MakeGenericErrorResponse())
 	}
+
 	log.Printf("Received request %+v", requestData)
 
-	responseTemplate, err := template.ParseFiles("templates/sample-response.html")
+	responseString, err := response.MakeSampleResponse()
 	if err != nil {
-		return writeResponse(conn, buildGenericErrorResponse())
+		log.Printf("Error generating response: %v", err)
+		return writeResponse(conn, response.MakeGenericErrorResponse())
 	}
 
-	var buf bytes.Buffer
-	err = responseTemplate.Execute(&buf, nil)
-	if err != nil {
-		log.Printf("Error executing template: %v", err)
-		return writeResponse(conn, buildGenericErrorResponse())
-	}
-
-	response := buildResponse("HTTP/1.1 200 OK", buf.String())
-	return writeResponse(conn, response)
+	return writeResponse(conn, responseString)
 }
