@@ -1,5 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head><title>Example</title></head>
-    <body><h1>Hello,World!</h1></body>
+    <head><title>Sample Response</title></head>
+    <body>
+    <h1>Response Data: {{.Request.Meta.Method}}</h1>
+    <h2>Request Info</h2>
+    <ul>
+        <li>Endpoint: {{.Request.Meta.Endpoint}}</li>
+        <li>Version: {{.Request.Meta.Version}}</li>
+    </ul>
+
+    <h2>Headers</h2>
+    {{if gt (len .Request.Headers) 0}}
+        <ul>
+            {{range $k, $v := .Request.Headers}}
+                <li>{{$k}}: {{$v}}</li>
+            {{end}}
+        </ul>
+    {{else}}
+        <p>No request headers found</p>
+    {{end}}
+
+    {{if eq .Request.Meta.Method "GET"}}
+        <h2>Query Params</h2>
+        {{if gt (len .Request.Params) 0}}
+            <ul>
+                {{range $k, $v := .Request.Params}}
+                    <li>{{$k}}: {{$v}}</li>
+                {{end}}
+            </ul>
+        {{else}}
+            <p>No query params present.</p>
+        {{end}}
+    {{end}}
+
+    {{if eq .ContentType "application/json"}}
+        <h2>JSON Payload</h2>
+        {{if gt (len .Request.Data) 0}}
+            <ul>
+                {{range $k, $v := .Request.Data}}
+                    <li>{{$k}}: {{$v}}</li>
+                {{end}}
+            </ul>
+        {{else}}
+            <p>No JSON Data present.</p>
+        {{end}}
+    {{end}}
+
+    {{if eq .ContentType "application/x-www-form-urlencoded"}}
+        <h2>Form Data</h2>
+        {{if gt (len .Request.Data) 0}}
+            <ul>
+                {{range $k, $v := .Request.Data}}
+                <li>{{$k}}: {{$v}}</li>
+                {{end}}
+            </ul>
+        {{else}}
+            <p>No form data present.</p>
+        {{end}}
+    {{end}}
+    </body>
 </html>

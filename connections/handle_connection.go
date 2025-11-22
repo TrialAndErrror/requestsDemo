@@ -33,7 +33,7 @@ func HandleConnection(conn net.Conn) error {
 
 	log.Printf("Received request %+v", requestData)
 
-	responseString, err := response.MakeSampleResponse()
+	responseString, err := response.MakeResponse(requestData)
 	if err != nil {
 		log.Printf("Error generating response: %v", err)
 		return writeResponse(conn, response.MakeGenericErrorResponse())

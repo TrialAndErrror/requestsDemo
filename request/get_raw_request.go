@@ -6,9 +6,9 @@ func getRawRequest(meta string, requestData []string) RawRequest {
 	requestMetaParts := strings.Split(meta, " ")
 	return RawRequest{
 		Meta: Meta{
-			method:   requestMetaParts[0],
-			endpoint: requestMetaParts[1],
-			version:  requestMetaParts[2],
+			Method:   requestMetaParts[0],
+			Endpoint: requestMetaParts[1],
+			Version:  requestMetaParts[2],
 		},
 		Data: requestData,
 	}

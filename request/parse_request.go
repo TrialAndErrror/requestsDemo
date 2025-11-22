@@ -3,7 +3,6 @@ package request
 import (
 	"fmt"
 	"log"
-	"strings"
 )
 
 func processGetRequest(request RawRequest) ProcessedRequest {
@@ -15,7 +14,7 @@ func processGetRequest(request RawRequest) ProcessedRequest {
 	headersMap := parseHeaders(headers)
 
 	// Parse query params
-	paramsMap := parseQueryParams(request.Meta.endpoint)
+	paramsMap := parseQueryParams(request.Meta.Endpoint)
 
 	return ProcessedRequest{
 		Meta:    request.Meta,
@@ -51,7 +50,8 @@ func processPostRequest(request RawRequest) ProcessedRequest {
 		log.Printf("Missing Content-Type header: %v", headers)
 		return processedRequest
 	}
-	contentType := strings.Trim(strings.SplitN(contentTypeRaw, ";", 2)[0], " ")
+
+	contentType := GetContentType(contentTypeRaw)
 
 	switch contentType {
 	case "application/json":
@@ -68,11 +68,11 @@ func processPostRequest(request RawRequest) ProcessedRequest {
 func ProcessRequest(requestText string) (ProcessedRequest, error) {
 	requestLines := getRequestLines(requestText)
 	rawRequest := getRawRequest(requestLines[0], requestLines[1:])
-	switch rawRequest.Meta.method {
+	switch rawRequest.Meta.Method {
 	case "GET":
 		return processGetRequest(rawRequest), nil
 	case "POST":
 		return processPostRequest(rawRequest), nil
 	}
-	return ProcessedRequest{}, fmt.Errorf("failed to process request; invalid method %s", rawRequest.Meta.method)
+	return ProcessedRequest{}, fmt.Errorf("failed to process request; invalid method %s", rawRequest.Meta.Method)
 }

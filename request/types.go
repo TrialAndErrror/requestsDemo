@@ -17,7 +17,7 @@ type ProcessedRequest struct {
 }
 
 type Meta struct {
-	method   string
-	endpoint string
-	version  string
+	Method   string
+	Endpoint string
+	Version  string
 }
