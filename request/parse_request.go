@@ -129,9 +129,10 @@ func processPostRequest(request RawRequest) ProcessedRequest {
 	var contentType string
 	for key, value := range headersMap {
 		if key == "Content-Type" {
-			contentType = value
+			contentType = strings.Trim(strings.Split(value, ";")[0], " ")
 		}
 	}
+	log.Printf("Content-Type: %v\n", contentType)
 
 	switch contentType {
 	case "application/json":
@@ -148,7 +149,7 @@ func processPostRequest(request RawRequest) ProcessedRequest {
 			Body:    body,
 			Data:    jsonData,
 		}
-	case "x-www-form-urlencoded":
+	case "application/x-www-form-urlencoded":
 		formData := parseKeyValuePairs(data)
 		return ProcessedRequest{
 			Meta:    request.Meta,
