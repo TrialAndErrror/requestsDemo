@@ -1,47 +1,12 @@
 package connections
 
 import (
-	"fmt"
+	"bytes"
+	"html/template"
 	"log"
 	"net"
-	"strconv"
-	"time"
+	"requestsDemo/request"
 )
-
-func makeRequestBuffer(conn net.Conn) ([]byte, error) {
-	buffer := make([]byte, 1024)
-	numBytes, err := conn.Read(buffer)
-	if err != nil {
-		log.Printf("Error reading from connection: %v", err)
-		return buffer, err
-	}
-	return buffer[:numBytes], nil
-}
-
-func sendGenericResponse(conn net.Conn) error {
-	statusCode := "HTTP/1.1 200 OK"
-
-	responseBody := `<!DOCTYPE html><html><head><title>Example</title></head><body><h1>Hello,World!</h1></body></html>`
-
-	headers := map[string]string{
-		"Date":           fmt.Sprintf("%v", time.Now().Format(time.RFC1123)),
-		"Server":         "Handmade Golang Server 1.0",
-		"Content-Length": strconv.Itoa(len(responseBody)),
-		"Content-Type":   "text/html",
-	}
-
-	headersString := ""
-	for key, value := range headers {
-		headersString += fmt.Sprintf("%s: %s\n", key, value)
-	}
-
-	responseData := fmt.Sprintf("%s\n%s\n\n%s", statusCode, headersString, responseBody)
-
-	response := []byte(responseData)
-
-	_, err := conn.Write(response)
-	return err
-}
 
 func cleanupConnection(conn net.Conn) {
 	err := conn.Close()
@@ -51,19 +16,30 @@ func cleanupConnection(conn net.Conn) {
 	}
 }
 
-func HandleConnection(conn net.Conn) {
+func HandleConnection(conn net.Conn) error {
 	defer cleanupConnection(conn)
 
 	requestBytes, err := makeRequestBuffer(conn)
 
-	_, err = parseRequest(conn, requestBytes)
+	requestString := string(requestBytes)
+	requestData := request.ProcessRequest(requestString)
 	if err != nil {
-		return
+		return err
+	}
+	log.Printf("Received request %+v", requestData)
+
+	responseTemplate, err := template.ParseFiles("templates/sample-response.html")
+	if err != nil {
+		return writeResponse(conn, buildGenericErrorResponse())
 	}
 
-	err = sendGenericResponse(conn)
+	var buf bytes.Buffer
+	err = responseTemplate.Execute(&buf, nil)
 	if err != nil {
-		log.Printf("Error writing to connection: %v", err)
-		return
+		log.Printf("Error executing template: %v", err)
+		return writeResponse(conn, buildGenericErrorResponse())
 	}
+
+	response := buildResponse("HTTP/1.1 200 OK", buf.String())
+	return writeResponse(conn, response)
 }

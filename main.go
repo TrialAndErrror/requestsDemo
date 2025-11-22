@@ -32,6 +32,10 @@ func main() {
 			continue
 		}
 
-		connections.HandleConnection(conn)
+		err = connections.HandleConnection(conn)
+		if err != nil {
+			log.Printf("Failed to handle connection: %v", err)
+			continue
+		}
 	}
 }
