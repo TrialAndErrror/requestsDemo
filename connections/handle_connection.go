@@ -17,8 +17,21 @@ func cleanupConnection(conn net.Conn) {
 func HandleConnection(conn net.Conn) error {
 	defer cleanupConnection(conn)
 
-	responseBody := "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"></head><body>Hello, World!</body></html>"
-	responseString := response.BuildResponse("HTTP/1.1 200 OK", responseBody)
+	requestBytes, err := makeRequestBuffer(conn)
+	if err != nil {
+		log.Printf("Error processing request: %v", err)
+		return writeResponse(conn, response.MakeGenericErrorResponse())
+	}
+
+	requestString := string(requestBytes)
+
+	log.Printf("Received request: %s", requestString)
+
+	responseString, err := response.MakeSampleResponse()
+	if err != nil {
+		log.Printf("Error making response: %v", err)
+		return writeResponse(conn, response.MakeGenericErrorResponse())
+	}
 
 	return writeResponse(conn, responseString)
 }

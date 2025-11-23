@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func BuildResponse(status string, responseBody string) string {
+func buildResponse(status string, responseBody string) string {
 	headers := map[string]string{
 		"Date":           fmt.Sprintf("%v", time.Now().Format(time.RFC1123)),
 		"Server":         "Handmade Golang Server 1.0",
