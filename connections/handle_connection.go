@@ -3,6 +3,7 @@ package connections
 import (
 	"log"
 	"net"
+	"requestsDemo/request"
 	"requestsDemo/response"
 )
 
@@ -24,12 +25,17 @@ func HandleConnection(conn net.Conn) error {
 	}
 
 	requestString := string(requestBytes)
-
-	log.Printf("Received request: %s", requestString)
-
-	responseString, err := response.MakeSampleResponse()
+	requestData, err := request.ProcessRequest(requestString)
 	if err != nil {
-		log.Printf("Error making response: %v", err)
+		log.Printf("Error parsing request: %v", err)
+		return writeResponse(conn, response.MakeGenericErrorResponse())
+	}
+
+	log.Printf("Received request %+v", requestData)
+
+	responseString, err := response.MakeResponse(requestData)
+	if err != nil {
+		log.Printf("Error generating response: %v", err)
 		return writeResponse(conn, response.MakeGenericErrorResponse())
 	}
 

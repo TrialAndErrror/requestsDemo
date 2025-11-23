@@ -1,14 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Sample Response</title>
+    <title>Sample Response: {{.Request.Meta.Method}}</title>
+    <style>
+        .navbar {
+            display: flex;
+            gap: 1rem;
+            padding: 0.5rem;
+            background-color: darkgrey;
+        }
+
+        .navbar button {
+            margin-right: 1rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            color: white
+        }
+
+        .get-request-button {
+            background-color: darkolivegreen;
+        }
+
+        .post-request-button {
+            background-color: purple;
+        }
+
+        .json-request-button {
+            background-color: orangered;
+        }
+    </style>
+    <script defer>
+        function setupJSONFormButton() {
+            const form = document.querySelector("#json-request-form");
+            const output = document.querySelector("body");
+
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault(); // don't do normal form POST
+
+                const formData = new FormData(form);
+                const payload = Object.fromEntries(formData.entries());
+
+                try {
+                    const res = await fetch("/", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "text/html",
+                        },
+                        body: JSON.stringify(payload),
+                    });
+
+                    const html = await res.text();
+
+                    if (!res.ok) {
+                        output.innerText = `Error ${res.status}:\n` + html;
+                        return;
+                    }
+
+                    // Inject the server-rendered HTML into the page
+                    output.innerHTML = html;
+                } catch (err) {
+                    output.innerText = "Request failed: " + err;
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", setupJSONFormButton)
+    </script>
 </head>
 <body style="padding: 0; margin: 0; background-color: burlywood">
 
+<div class="navbar">
+    <form method="get">
+        <input hidden="hidden" name="sky" value="blue">
+        <input hidden="hidden" name="hello" value="world">
+        <button type="submit" class="get-request-button">
+            GET request
+        </button>
+    </form>
+    <form method="post" action="/">
+        <input hidden="hidden" name="sky" value="blue">
+        <input hidden="hidden" name="hello" value="world">
+        <button type="submit" class="post-request-button">
+            POST request
+        </button>
+    </form>
+    <form id="json-request-form" method="post">
+        <input hidden="hidden" name="sky" value="blue">
+        <input hidden="hidden" name="hello" value="world">
+        <button type="submit" class="json-request-button">
+            JSON request
+        </button>
+    </form>
+</div>
 <div style="display: grid; grid-template-columns: 1fr 2fr; padding: 1rem;">
     <div>
-        <h1>Sample Response</h1>
+        <h1>Request Data</h1>
+        <h2>Metadata</h2>
+        <ul>
+            <li>Method: {{.Request.Meta.Method}}</li>
+            {{if gt (len .ContentType) 0}}
+            <li>Content-Type: {{.ContentType}}</li>
+            {{end}}
+            <li>Endpoint: {{.Request.Meta.Endpoint}}</li>
+            <li>Version: {{.Request.Meta.Version}}</li>
+        </ul>
+
+        {{if eq .Request.Meta.Method "GET"}}
+        <h2>Query Params</h2>
+        {{if gt (len .Request.Params) 0}}
+        <ul>
+            {{range $k, $v := .Request.Params}}
+            <li>{{$k}}: {{$v}}</li>
+            {{end}}
+        </ul>
+        {{else}}
+        <p>No query params present.</p>
+        {{end}}
+        {{end}}
+
+        {{if eq .ContentType "application/json"}}
+        <h2>JSON Payload</h2>
+        {{if gt (len .Request.Data) 0}}
+        <ul>
+            {{range $k, $v := .Request.Data}}
+            <li>{{$k}}: {{$v}}</li>
+            {{end}}
+        </ul>
+        {{else}}
+        <p>No JSON Data present.</p>
+        {{end}}
+        {{end}}
+
+        {{if eq .ContentType "application/x-www-form-urlencoded"}}
+        <h2>Form Data</h2>
+        {{if gt (len .Request.Data) 0}}
+        <ul>
+            {{range $k, $v := .Request.Data}}
+            <li>{{$k}}: {{$v}}</li>
+            {{end}}
+        </ul>
+        {{else}}
+        <p>No form data present.</p>
+        {{end}}
+        {{end}}
     </div>
+    <div>
+        <h2>Headers</h2>
+        {{if gt (len .Request.Headers) 0}}
+        <ul>
+            {{range $k, $v := .Request.Headers}}
+            <li>{{$k}}: {{$v}}</li>
+            {{end}}
+        </ul>
+        {{else}}
+        <p>No request headers found</p>
+        {{end}}
+    </div>
+
 </div>
 </body>
 </html>

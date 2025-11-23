@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"html/template"
 	"log"
+	"requestsDemo/request"
 )
 
-func MakeSampleResponse() (string, error) {
+func MakeResponse(data request.ProcessedRequest) (string, error) {
 	responseTemplate, err := template.ParseFiles("templates/sample-response.html")
 	if err != nil {
 		log.Printf("Error parsing template: %v", err)
@@ -15,7 +16,12 @@ func MakeSampleResponse() (string, error) {
 
 	var buf bytes.Buffer
 
-	err = responseTemplate.Execute(&buf, nil)
+	contextData := map[string]interface{}{
+		"Request":     data,
+		"ContentType": request.GetContentType(data.Headers["Content-Type"]),
+	}
+
+	err = responseTemplate.Execute(&buf, contextData)
 	if err != nil {
 		log.Printf("Error executing template: %v", err)
 		return "", err
